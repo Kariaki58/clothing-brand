@@ -4,6 +4,7 @@ import { options } from "../auth/options";
 import User from "../../../../models/user";
 import Order from "../../../../models/orders";
 import { logActivity } from "@/lib/activityLogger";
+import { Activities } from "@/lib/activityLogger";
 
 
 export async function GET(request) {
@@ -199,12 +200,18 @@ export async function POST(request) {
 
         await order.save();
 
+        console.log("product 202")
+
+        const session = await getServerSession(options);
+
         await logActivity(Activities.orderCreated(order, session.user));
+
         return new Response(
             JSON.stringify({ message: "Order processed successfully." }),
             { status: 201 }
         );
     } catch (error) {
+        console.log(error)
         return new Response(
             JSON.stringify({ message: "Internal Server Error." }),
             { status: 500 }

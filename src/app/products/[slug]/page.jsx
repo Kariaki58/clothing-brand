@@ -29,7 +29,7 @@ function sanitizeProduct(product) {
 }
 
 export default async function ProductPage({ params }) {
-    const slug = params.slug;
+    const slug = (await params).slug;
     const product = await getProduct(slug);
 
     if (!product) {

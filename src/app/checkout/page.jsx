@@ -72,7 +72,8 @@ export default function CheckoutPage() {
                         total: total,
                         transactionId: transaction.reference,
                     };
-                    const response = await fetch(`${process.env.HOST}/api/orders`, {
+                    
+                    const response = await fetch(`/api/orders`, {
                         method: "POST",
                         headers: {
                             "Content-Type": "application/json",
