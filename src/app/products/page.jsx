@@ -9,6 +9,8 @@ export default async function ProductsPage({ searchParams }) {
     const currentPage = Number(searchData.page) || 1;
     const categoryFilter = searchData.category || "All";
 
+    console.log(searchData)
+
     const itemsPerPage = 8;
 
     let products = [];
@@ -25,6 +27,8 @@ export default async function ProductsPage({ searchParams }) {
         const data = await response.json();
         products = data.data;
         categories = await response2.json();
+
+        console.log({products})
 
 
     } catch (error) {

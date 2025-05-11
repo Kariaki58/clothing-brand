@@ -200,7 +200,6 @@ export async function POST(request) {
 
         await order.save();
 
-        console.log("product 202")
 
         const session = await getServerSession(options);
 
@@ -211,7 +210,6 @@ export async function POST(request) {
             { status: 201 }
         );
     } catch (error) {
-        console.log(error)
         return new Response(
             JSON.stringify({ message: "Internal Server Error." }),
             { status: 500 }
