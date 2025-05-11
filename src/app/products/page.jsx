@@ -16,8 +16,8 @@ export default async function ProductsPage({ searchParams }) {
     let error = null;
 
     try {
-        const response = await fetch('http://localhost:3000/api/products');
-        const response2 = await fetch('http://localhost:3000/api/category');
+        const response = await fetch(`${process.env.HOST}/api/products`);
+        const response2 = await fetch(`${process.env.HOST}/api/category`);
 
         if (!response.ok || !response2.ok) {
             throw new Error('Failed to fetch data');
