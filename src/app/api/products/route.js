@@ -47,6 +47,8 @@ export async function GET(req) {
         const totalPages = Math.ceil(total / limit);
         const hasNext = page < totalPages;
         const hasPrevious = page > 1;
+
+        console.log(products)
         
         return new Response(JSON.stringify({
             data: products,
@@ -98,6 +100,7 @@ export async function POST(req) {
 
         await connectToDatabase();
 
+
         const user = await User.findOne({ _id: session.user.id });
 
         if (!user || user.role !== 'admin') {
@@ -122,6 +125,7 @@ export async function POST(req) {
                 headers: { 'Content-Type': 'application/json' } 
             });
         }
+        console.log("line 128")
     
         // 3. Parse and validate variants
         let variantsArray;
@@ -138,9 +142,12 @@ export async function POST(req) {
                 headers: { 'Content-Type': 'application/json' } 
             });
         }
+        console.log("line 145")
     
         // 4. Validate product name uniqueness
         const existingProduct = await Product.findOne({ name: formData.get('name') });
+
+        console.log(existingProduct)
         if (existingProduct) {
             return new Response(JSON.stringify({ 
                 error: "Product name already exists" 
@@ -149,7 +156,7 @@ export async function POST(req) {
                 headers: { 'Content-Type': 'application/json' } 
             });
         }
-    
+        console.log('line 154')
         // 5. Validate all data with Zod
         const productData = {
             name: formData.get('name'),

@@ -72,7 +72,6 @@ export default function CheckoutPage() {
                         total: total,
                         transactionId: transaction.reference,
                     };
-                    console.log("here")
                     const response = await fetch("http://localhost:3000/api/orders", {
                         method: "POST",
                         headers: {

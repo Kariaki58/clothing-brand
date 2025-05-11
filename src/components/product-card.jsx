@@ -4,7 +4,6 @@ import Image from "next/image";
 
 export default function ProductCard({ product }) {
     const isOnSale = product.originalPrice && product.originalPrice > product.price;
-    console.log(product);
     return (
         <div className="group relative">
             <div className="w-full h-[400px] overflow-hidden rounded-md bg-slate-100 group-hover:opacity-75 relative">

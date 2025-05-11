@@ -27,7 +27,7 @@ const VariantSchema = new mongoose.Schema({
         unique: true, 
         sparse: true 
     }
-}, { _id: false });
+}, { _id: true });
 
 const ProductSchema = new mongoose.Schema({
     name: {
