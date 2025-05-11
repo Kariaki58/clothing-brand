@@ -4,6 +4,7 @@ import { ChevronLeft } from "lucide-react";
 import Product from "../../../../models/product";
 import { connectToDatabase } from "@/lib/mongoose";
 import Link from "next/link";
+import { Suspense } from "react";
 
 const getProduct = async (slug) => {
     try {
@@ -49,11 +50,13 @@ export default async function ProductPage({ params }) {
                 </Link>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <ProductImages 
-                        variants={sanitizedProduct.variants} 
-                        name={sanitizedProduct.name} 
-                        selectedColor={sanitizedProduct.variants[0]?.colors?.[0]} 
-                    />
+                    <Suspense fallback={<div>Loading images...</div>}>
+                        <ProductImages 
+                            variants={sanitizedProduct.variants} 
+                            name={sanitizedProduct.name} 
+                            selectedColor={sanitizedProduct.variants[0]?.colors?.[0]} 
+                        />
+                    </Suspense>
                     <ProductActions product={sanitizedProduct} />
                 </div>
             </div>
