@@ -10,7 +10,7 @@ export default async function Home() {
   let products = [];
   let loading = true;
   try {
-    const res = await fetch("http://localhost:3000/api/products?page=1&limit=10", {
+    const res = await fetch(`${process.env.HOST}/api/products?page=1&limit=10`, {
       cache: "no-store",
     });
     if (!res.ok) {
