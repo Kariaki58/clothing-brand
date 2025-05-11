@@ -81,9 +81,9 @@ export default function ProductActions({ product }) {
     const availableColorsForSize = useMemo(() => {
         const colors = new Set();
         availableVariants.forEach(variant => {
-        if (variant.sizes.includes(selectedSize)) {
-            variant.colors.forEach(color => colors.add(color));
-        }
+            if (variant.sizes.includes(selectedSize)) {
+                variant.colors.forEach(color => colors.add(color));
+            }
         });
         return Array.from(colors);
     }, [selectedSize, availableVariants]);
@@ -122,10 +122,10 @@ export default function ProductActions({ product }) {
         
         // Reset color if current selection isn't available
         if (!availableColorsForSize.includes(selectedColor)) {
-        const firstAvailableColor = availableVariants.find(v => 
-            v.sizes.includes(size)
-        )?.colors?.[0];
-        setSelectedColor(firstAvailableColor || null);
+            const firstAvailableColor = availableVariants.find(v => 
+                v.sizes.includes(size)
+            )?.colors?.[0];
+            setSelectedColor(firstAvailableColor || null);
         }
     };
 
@@ -183,13 +183,12 @@ export default function ProductActions({ product }) {
                 <p className="text-2xl font-semibold text-slate-900">
                     ${displayPrice.toFixed(2)}
                 </p>
-                {(currentVariant?.price || currentVariant?.priceAdjustment) && 
+                {(currentVariant?.price || currentVariant?.priceAdjustment !== 0) &&
                     displayPrice !== product.basePrice && (
                         <p className="ml-2 text-sm text-slate-500 line-through">
                             ${product.basePrice.toFixed(2)}
                         </p>
-                    )
-                }
+                    )}
             </div>
 
             <p className="text-slate-600 mt-4">{product.description}</p>
@@ -197,43 +196,45 @@ export default function ProductActions({ product }) {
             {/* Color Selection */}
             <div className="mt-6">
                 <div className="flex justify-between items-center">
-                <h2 className="text-sm font-medium text-slate-900">Color</h2>
-                {selectedColor && (
-                    <span className="text-xs text-slate-500">
-                    Selected: {selectedColor}
-                    </span>
-                )}
+                    <h2 className="text-sm font-medium text-slate-900">Color</h2>
+                    {selectedColor && (
+                        <span className="text-xs text-slate-500">
+                            Selected: {selectedColor}
+                        </span>
+                    )}
                 </div>
                 <div className="flex flex-wrap gap-2 mt-2">
-                {uniqueColors.map((color) => {
-                    const isAvailable = availableColorsForSize.includes(color);
-                    const isSelected = selectedColor === color;
-                    
-                    return (
-                    <button
-                        key={color}
-                        onClick={() => isAvailable && handleColorSelect(color)}
-                        disabled={!isAvailable}
-                        className={`relative rounded-full h-10 w-10 border-2 flex items-center justify-center ${
-                        isSelected 
-                            ? "border-slate-900 ring-2 ring-offset-2 ring-slate-300" 
-                            : "border-slate-200"
-                        } ${
-                        !isAvailable
-                            ? "opacity-50 cursor-not-allowed after:absolute after:inset-0 after:w-full after:h-[1px] after:bg-red-500 after:rotate-[-15deg] after:top-1/2 after:left-0"
-                            : "cursor-pointer hover:border-slate-400"
-                        } ${color === "Black" ? "bg-black" : ""} ${
-                        color === "White" ? "bg-white" : ""
-                        } ${color === "Gray" ? "bg-slate-400" : ""}`}
-                        aria-label={color}
-                        title={!isAvailable ? "Out of stock" : color}
-                    >
-                        {!isAvailable && (
-                        <span className="sr-only">Out of stock</span>
-                        )}
-                    </button>
-                    );
-                })}
+                    {uniqueColors.map((color) => {
+                        const isAvailable = availableColorsForSize.includes(color);
+                        const isSelected = selectedColor === color;
+                        
+                        // Convert color name to lowercase for CSS compatibility
+                        const cssColor = color.toLowerCase();
+                        
+                        return (
+                            <button
+                                key={color}
+                                onClick={() => isAvailable && handleColorSelect(color)}
+                                disabled={!isAvailable}
+                                style={{ backgroundColor: cssColor }}
+                                className={`relative rounded-full h-10 w-10 border-2 flex items-center justify-center ${
+                                    isSelected 
+                                        ? "border-slate-900 ring-2 ring-offset-2 ring-slate-300" 
+                                        : "border-slate-200"
+                                } ${
+                                    !isAvailable
+                                        ? "opacity-50 cursor-not-allowed after:absolute after:inset-0 after:w-full after:h-[1px] after:bg-red-500 after:rotate-[-15deg] after:top-1/2 after:left-0"
+                                        : "cursor-pointer hover:border-slate-400"
+                                }`}
+                                aria-label={color}
+                                title={!isAvailable ? "Out of stock" : color}
+                            >
+                                {!isAvailable && (
+                                    <span className="sr-only">Out of stock</span>
+                                )}
+                            </button>
+                        );
+                    })}
                 </div>
             </div>
 

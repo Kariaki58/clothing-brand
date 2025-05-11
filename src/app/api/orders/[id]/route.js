@@ -68,6 +68,7 @@ export async function PUT(request, { params }) {
             { new: true }
         ).lean();
         
+        
         if (!updatedOrder) {
             return new Response(JSON.stringify({
                 error: "Order not found"
@@ -112,7 +113,6 @@ export async function PUT(request, { params }) {
         });
         
     } catch (error) {
-        console.error("Error updating order:", error);
         return new Response(JSON.stringify({ message: "Internal Server Error" }), { 
             status: 500,
             headers: { 'Content-Type': 'application/json' }

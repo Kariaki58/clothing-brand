@@ -5,6 +5,8 @@ import { uploadImage, deleteImage } from "@/lib/cloudinary-upload";
 import { getServerSession } from "next-auth";
 import z from "zod";
 import { options } from "../../auth/options";
+import { logActivity } from "@/lib/activityLogger";
+import { Activities } from "@/lib/activityLogger";
 
 
 const VariantSchema = z.object({
@@ -51,7 +53,6 @@ export async function GET(req, { params }) {
         
         return new Response(JSON.stringify(product));
     } catch (error) {
-        console.error('Error fetching product:', error);
         return new Response(JSON.stringify(
             { error: 'Failed to fetch product' },
         ), { status: 500 });
@@ -126,7 +127,9 @@ export async function PUT(req, { params }) {
                         try {
                             await deleteImage(oldVariant.imageUrl);
                         } catch (e) {
-                            console.warn('Failed to delete old image:', e.message);
+                            return new Response(JSON.stringify({
+                                error: `Failed to delete old image for variant ${variant._id}`
+                            }), { status: 500 });
                         }
                     }
                 }
@@ -150,7 +153,6 @@ export async function PUT(req, { params }) {
 
         // Ensure each variant has an imageUrl, either new or existing
         for (const updatedVariant of updatedVariants) {
-            console.log(updatedVariant._id)
             if (!updatedVariant.imageUrl && updatedVariant._id) {
                 const oldVariant = existingProduct.variants.find(
                     v => v._id.toString() === updatedVariant._id
@@ -177,6 +179,8 @@ export async function PUT(req, { params }) {
         if (!updatedProduct) {
             return new Response(JSON.stringify({ error: 'Failed to update product' }), { status: 500 });
         }
+
+        await logActivity(Activities.productUpdated(updatedProduct, session.user));
 
         return new Response(JSON.stringify({
             message: 'Product updated successfully',
@@ -251,7 +255,6 @@ export async function DELETE(req, { params }) {
             },
         });
     } catch (error) {
-        console.error('Error deleting product:', error);
         return new Response(JSON.stringify({ error: 'Failed to delete product' }), {
             status: 500,
             headers: {

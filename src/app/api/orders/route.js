@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { options } from "../auth/options";
 import User from "../../../../models/user";
 import Order from "../../../../models/orders";
+import { logActivity } from "@/lib/activityLogger";
 
 
 export async function GET(request) {
@@ -96,7 +97,6 @@ export async function GET(request) {
             headers: { 'Content-Type': 'application/json' }
         });
     } catch (error) {
-        console.error("Error fetching orders:", error);
         return new Response(JSON.stringify({ message: "Internal Server Error" }), { 
             status: 500,
             headers: { 'Content-Type': 'application/json' }
@@ -195,14 +195,16 @@ export async function POST(request) {
             transactionId,
         });
 
+
+
         await order.save();
 
+        await logActivity(Activities.orderCreated(order, session.user));
         return new Response(
             JSON.stringify({ message: "Order processed successfully." }),
             { status: 201 }
         );
     } catch (error) {
-        console.error("POST /order error:", error);
         return new Response(
             JSON.stringify({ message: "Internal Server Error." }),
             { status: 500 }

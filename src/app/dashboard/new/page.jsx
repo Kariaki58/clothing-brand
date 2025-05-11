@@ -122,7 +122,6 @@ export default function NewProduct() {
                 })));
                 
             } catch (error) {
-                console.error('Error fetching product:', error);
                 toast.error('Failed to load product data');
             } finally {
                 setIsLoading(false);

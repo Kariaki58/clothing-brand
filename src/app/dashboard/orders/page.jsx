@@ -64,7 +64,6 @@ export default function DashboardOrders() {
                 setTotalPages(data.totalPages);
                 setIsLoading(false);
             } catch (error) {
-                console.error("Error fetching orders:", error);
                 toast.error("Failed to load orders");
                 setIsLoading(false);
             }
@@ -130,7 +129,6 @@ export default function DashboardOrders() {
             toast.success(`Order status updated to ${newStatus}`);
         } catch (error) {
             toast.error("Failed to update order status");
-            console.error("Error updating order status:", error);
         }
     };
 
@@ -173,7 +171,6 @@ export default function DashboardOrders() {
             setCancelReason("");
         } catch (error) {
             toast.error("Failed to cancel order");
-            console.error("Error cancelling order:", error);
         }
     };
 
@@ -271,7 +268,7 @@ export default function DashboardOrders() {
             <TableBody>
                 {currentOrders.map((order) => (
                 <TableRow key={order.id}>
-                    <TableCell className="font-medium">{order.id}</TableCell>
+                    <TableCell className="font-medium">{`#${order.id.toString().substring(0, 4)}`}</TableCell>
                     <TableCell>{order.customer}</TableCell>
                     <TableCell className="hidden sm:table-cell">{order.date}</TableCell>
                     <TableCell className="text-right">${order.total}</TableCell>
@@ -439,7 +436,7 @@ export default function DashboardOrders() {
         <Dialog open={isDetailsDialogOpen} onOpenChange={setIsDetailsDialogOpen}>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader className="sticky top-0 bg-background z-10">
-                <DialogTitle>Order Details - {selectedOrder?.id}</DialogTitle>
+                <DialogTitle>Order Details - {`#${selectedOrder?.id.toString().substring(0, 4)}`}</DialogTitle>
                 <DialogDescription>
                 Order placed on {selectedOrder?.date}
                 </DialogDescription>

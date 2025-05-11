@@ -20,7 +20,7 @@ export default async function Home() {
     const data = await res.json();
     products = data.data;
   } catch (error) {
-      console.error("Error fetching products:", error);
+      error = error.message || "An error occurred while fetching products";
   } finally {
       loading = false;
   }
@@ -91,9 +91,9 @@ export default async function Home() {
               simplicity, quality, and versatility in mind—crafted to become staples in your wardrobe
               for years to come.
             </p>
-            <Button variant="outline" asChild>
+            {/* <Button variant="outline" asChild>
               <Link href="/about">Learn More</Link>
-            </Button>
+            </Button> */}
           </div>
         </div>
       </section>

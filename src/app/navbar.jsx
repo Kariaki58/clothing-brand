@@ -21,6 +21,7 @@ export default function Navbar() {
         { name: "Shop", href: "/products" },
         { name: "FAQ", href: "/faq" },
         { name: "Track Order", href: "/tracking" },
+        { name: "Contact", href: "/contact" },
     ];
 
     return (

@@ -1,84 +1,110 @@
+"use client";
+import { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Package, CheckCircle2, Truck, ChevronRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { statuses } from "@/lib/order-status"; // Your status definitions
 
+
+const getStatusBadge = (status) => {
+    switch (status) {
+        case "pending":
+            return <Badge variant="secondary" className="bg-gray-100 text-gray-800">
+            <Clock className="h-3 w-3 mr-1" /> Pending
+            </Badge>;
+        case "processing":
+            return <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+            <RefreshCw className="h-3 w-3 mr-1" /> Processing
+            </Badge>;
+        case "shipped":
+            return <Badge variant="secondary" className="bg-purple-100 text-purple-800">
+            <Truck className="h-3 w-3 mr-1" /> Shipped
+            </Badge>;
+        case "delivered":
+            return <Badge variant="secondary" className="bg-green-100 text-green-800">
+            <CheckCircle className="h-3 w-3 mr-1" /> Delivered
+            </Badge>;
+        case "cancelled":
+            return <Badge variant="secondary" className="bg-red-100 text-red-800">
+            <XCircle className="h-3 w-3 mr-1" /> Cancelled
+            </Badge>;
+        default:
+            return <Badge variant="secondary">{status}</Badge>;
+    }
+};
 export default function TrackingPage() {
+    const [orderId, setOrderId] = useState('');
+    const [email, setEmail] = useState('');
+    const [result, setResult] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+
+    const checkStatus = async () => {
+        if (!orderId || !email) {
+            setError('Both fields are required');
+            return;
+        }
+
+        setLoading(true);
+        setError(null);
+
+        try {
+            const response = await fetch('/api/track', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ orderId, email }),
+            });
+
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || 'Failed to check status');
+            
+            setResult(data);
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <div className="py-12">
             <div className="container px-4 mx-auto">
                 <div className="max-w-2xl mx-auto text-center">
-                    <h1 className="text-3xl font-bold text-slate-900 mb-4">Track Your Order</h1>
-                    <p className="text-slate-600 mb-8">
-                        Enter your order number and email address to check the status of your order.
-                    </p>
-                    <div className="flex flex-col sm:flex-row gap-2">
-                        <Input placeholder="Order Number" className="flex-1" />
-                        <Input placeholder="Email Address" className="flex-1" />
-                        <Button>Track Order</Button>
-                    </div>
-                </div>
-
-                {/* Example tracking info */}
-                <div className="max-w-2xl mx-auto mt-16 border border-slate-200 rounded-lg p-6">
-                    <div className="flex justify-between items-start mb-6">
-                        <div>
-                        <h2 className="text-lg font-medium text-slate-900">Order #123456</h2>
-                        <p className="text-sm text-slate-500">Placed on October 15, 2023</p>
-                        </div>
-                        <Button variant="outline" size="sm">
-                        View Order Details
+                    <h1 className="text-3xl font-bold mb-4">Order Status Check</h1>
+                    <div className="flex flex-col sm:flex-row gap-2 mb-8">
+                        <Input
+                            placeholder="Order ID"
+                            value={orderId}
+                            onChange={(e) => setOrderId(e.target.value)}
+                        />
+                        <Input
+                            placeholder="Email"
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                        />
+                        <Button onClick={checkStatus} disabled={loading}>
+                            {loading ? 'Checking...' : 'Check Status'}
                         </Button>
                     </div>
 
-                    <div className="space-y-8">
-                        <div className="flex items-start gap-4">
-                            <div className="p-2 bg-slate-100 rounded-full">
-                                <Package className="h-5 w-5 text-slate-600" />
-                            </div>
-                            <div className="flex-1">
-                                <div className="flex justify-between">
-                                <h3 className="font-medium text-slate-900">Order Placed</h3>
-                                <span className="text-sm text-slate-500">Oct 15, 2023</span>
-                                </div>
-                                <p className="text-sm text-slate-500 mt-1">
-                                Your order has been received and is being processed.
-                                </p>
-                            </div>
-                        </div>
+                    {error && <p className="text-red-500 mb-4">{error}</p>}
 
-                        <div className="flex items-start gap-4">
-                            <div className="p-2 bg-slate-100 rounded-full">
-                                <CheckCircle2 className="h-5 w-5 text-slate-600" />
+                    {result && (
+                        <div className="mt-8 p-6 border rounded-lg">
+                            <h2 className="text-xl font-semibold mb-2">Order #{result.orderId}</h2>
+                            <div className="flex items-center gap-2">
+                                <div className={`w-3 h-3 rounded-full ${
+                                    statuses[result.status]?.color || 'bg-gray-400'
+                                }`} />
+                                <span className="font-medium">
+                                    {statuses[result.status]?.label || result.status}
+                                </span>
                             </div>
-                            <div className="flex-1">
-                                <div className="flex justify-between">
-                                <h3 className="font-medium text-slate-900">Order Confirmed</h3>
-                                <span className="text-sm text-slate-500">Oct 16, 2023</span>
-                                </div>
-                                <p className="text-sm text-slate-500 mt-1">
-                                Your order has been confirmed and is being prepared for shipment.
-                                </p>
-                            </div>
+                            <p className="text-sm text-muted-foreground mt-2">
+                                Last updated: {new Date(result.lastUpdated).toLocaleString()}
+                            </p>
                         </div>
-
-                        <div className="flex items-start gap-4">
-                            <div className="p-2 bg-slate-100 rounded-full">
-                                <Truck className="h-5 w-5 text-slate-600" />
-                            </div>
-                            <div className="flex-1">
-                                <div className="flex justify-between">
-                                    <h3 className="font-medium text-slate-900">Shipped</h3>
-                                    <span className="text-sm text-slate-500">Oct 18, 2023</span>
-                                </div>
-                                <p className="text-sm text-slate-500 mt-1">
-                                    Your order has been shipped. Expected delivery: Oct 22, 2023
-                                </p>
-                                <Button variant="link" size="sm" className="pl-0 mt-2">
-                                    Track Package <ChevronRight className="h-4 w-4 ml-1" />
-                                </Button>
-                            </div>
-                        </div>
-                    </div>
+                    )}
                 </div>
             </div>
         </div>

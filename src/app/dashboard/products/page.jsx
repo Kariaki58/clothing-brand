@@ -53,7 +53,6 @@ export default function DashboardProduct() {
                 setTotalProducts(data.pagination.total);
                 setTotalPages(data.pagination.totalPages);
             } catch (error) {
-                console.error('Error fetching products:', error);
                 toast.error('Failed to load products. Please try again later.');
             } finally {
                 setIsLoading(false);

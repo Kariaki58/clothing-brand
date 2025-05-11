@@ -6,8 +6,7 @@ export async function GET(req) {
     try {
         await connectToDatabase();
 
-        const categories = await Category.find({ isActive: true })
-            .select('-__v -createdAt -updatedAt')
+        const categories = await Category.find()
             .lean();
 
         return new Response(JSON.stringify(categories), {

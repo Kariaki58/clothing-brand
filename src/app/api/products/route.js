@@ -48,7 +48,6 @@ export async function GET(req) {
         const hasNext = page < totalPages;
         const hasPrevious = page > 1;
 
-        console.log(products)
         
         return new Response(JSON.stringify({
             data: products,
@@ -67,7 +66,6 @@ export async function GET(req) {
             },
         });
     } catch (error) {
-        console.error('Error fetching products:', error);
         return new Response(JSON.stringify({ error: 'Failed to fetch products' }), {
             status: 500,
             headers: {
@@ -125,7 +123,6 @@ export async function POST(req) {
                 headers: { 'Content-Type': 'application/json' } 
             });
         }
-        console.log("line 128")
     
         // 3. Parse and validate variants
         let variantsArray;
@@ -142,12 +139,10 @@ export async function POST(req) {
                 headers: { 'Content-Type': 'application/json' } 
             });
         }
-        console.log("line 145")
     
         // 4. Validate product name uniqueness
         const existingProduct = await Product.findOne({ name: formData.get('name') });
 
-        console.log(existingProduct)
         if (existingProduct) {
             return new Response(JSON.stringify({ 
                 error: "Product name already exists" 
@@ -156,7 +151,6 @@ export async function POST(req) {
                 headers: { 'Content-Type': 'application/json' } 
             });
         }
-        console.log('line 154')
         // 5. Validate all data with Zod
         const productData = {
             name: formData.get('name'),
@@ -211,7 +205,6 @@ export async function POST(req) {
                     const uploadResult = await uploadImage(Buffer.from(buffer));
                     imageUrl = uploadResult.secure_url;
                 } catch (uploadError) {
-                    console.error("Image upload failed:", uploadError);
                     return new Response(JSON.stringify({ 
                         error: `Failed to upload image for variant ${i+1}` 
                     }), { 
@@ -261,7 +254,6 @@ export async function POST(req) {
         });
         
     } catch (error) {
-        console.error("Server error:", error);
         return new Response(JSON.stringify({ 
             error: "Internal server error" 
         }), { 

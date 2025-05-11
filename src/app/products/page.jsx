@@ -26,8 +26,17 @@ export default async function ProductsPage({ searchParams }) {
         products = data.data;
         categories = await response2.json();
 
+
     } catch (error) {
-        console.error('Error fetching products:', error);
+        error = error.message || "An error occurred while fetching products";
+    }
+
+    if (error) {
+        return (
+            <div className="flex items-center justify-center h-screen">
+                <p className="text-lg font-semibold text-red-500">Error: {error}</p>
+            </div>
+        );
     }
 
     // Filter products by category
@@ -58,6 +67,14 @@ export default async function ProductsPage({ searchParams }) {
                 </div>
                 {/* Category filters */}
                 <div className="flex flex-wrap gap-2 mb-8">
+                    <Link
+                        href={`/products`}
+                        className={`px-4 py-2 text-sm rounded-full border ${
+                            categoryFilter === "All" ? "bg-slate-900 text-white border-slate-900" : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                        }`}
+                    >
+                        All
+                    </Link>
                     {categories.map((category) => (
                         <Link
                             key={category._id}

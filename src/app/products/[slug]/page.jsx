@@ -15,23 +15,27 @@ const getProduct = async (slug) => {
     }
 };
 
-export function sanitizeProduct(product) {
+
+function sanitizeProduct(product) {
     return {
         ...product,
-        _id: product._id.toString(),
-        createdAt: product.createdAt.toISOString(),
-        updatedAt: product.updatedAt.toISOString()
+        _id: product._id?.toString(),
+        variants: product.variants.map((variant) => ({
+            ...variant,
+            _id: variant._id?.toString(),
+        })),
     };
 }
 
-
 export default async function ProductPage({ params }) {
-    const slug = (await params).slug;
+    const slug = params.slug;
     const product = await getProduct(slug);
 
     if (!product) {
         return <div>Product not found</div>;
     }
+
+    const sanitizedProduct = sanitizeProduct(product);
 
     return (
         <div className="py-8">
@@ -46,11 +50,11 @@ export default async function ProductPage({ params }) {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <ProductImages 
-                        variants={product.variants} 
-                        name={product.name} 
-                        selectedColor={product.variants[0]?.colors?.[0]} 
+                        variants={sanitizedProduct.variants} 
+                        name={sanitizedProduct.name} 
+                        selectedColor={sanitizedProduct.variants[0]?.colors?.[0]} 
                     />
-                    <ProductActions product={sanitizeProduct(product)} />
+                    <ProductActions product={sanitizedProduct} />
                 </div>
             </div>
         </div>
