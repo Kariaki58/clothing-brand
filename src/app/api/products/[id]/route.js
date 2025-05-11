@@ -184,7 +184,6 @@ export async function PUT(req, { params }) {
         }), { status: 200 });
 
     } catch (error) {
-        console.error('Error updating product:', error);
         return new Response(JSON.stringify({
             error: 'Failed to update product',
             details: error.message

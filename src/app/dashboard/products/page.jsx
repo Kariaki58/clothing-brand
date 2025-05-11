@@ -19,6 +19,7 @@ import {
 import { MoreHorizontal } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import React from "react";
 import { useRouter } from "next/navigation";
 
 const ITEMS_PER_PAGE = 10;
@@ -71,7 +72,13 @@ export default function DashboardProduct() {
             });
             
             if (!response.ok) {
-                throw new Error('Failed to delete product');
+                const errorData = await response.json();
+                if (errorData.error) {
+                    toast.error(errorData.error);
+                } else {
+                    toast.error('Failed to delete product. Please try again.');
+                }
+                return
             }
             
             // Refresh the product list
@@ -92,7 +99,6 @@ export default function DashboardProduct() {
             
             toast.success('Product deleted successfully');
         } catch (error) {
-            console.error('Error deleting product:', error);
             toast.error('Failed to delete product. Please try again.');
         }
     };
@@ -181,100 +187,102 @@ export default function DashboardProduct() {
                     </TableHeader>
                     <TableBody>
                         {products.map((product) => (
-                            <TableRow key={product._id}>
-                                <TableCell className="font-medium flex items-center gap-2">
-                                    <button
-                                        onClick={() => toggleExpand(product._id)}
-                                        className="text-gray-500 hover:text-gray-800 focus:outline-none"
-                                        aria-label={expandedRows[product._id] ? "Collapse details" : "Expand details"}
-                                    >
-                                        {expandedRows[product._id] ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                                    </button>
-                                    {product.name}
-                                </TableCell>
-                                <TableCell>
-                                    ${product.basePrice.toFixed(2)}
-                                    {product.variants.length > 0 && (
-                                        <>
-                                            <br />
-                                            <span className="text-xs text-muted-foreground">
-                                                +${Math.max(...product.variants.map(v => v.priceAdjustment || 0)).toFixed(2)} max adj.
-                                            </span>
-                                        </>
-                                    )}
-                                </TableCell>
-                                <TableCell>
-                                    {product.variants.reduce((sum, variant) => sum + variant.stock, 0)}
-                                    <br />
-                                    <span className="text-xs text-muted-foreground">
-                                        {product.variants.length} variant{product.variants.length !== 1 ? "s" : ""}
-                                    </span>
-                                </TableCell>
-                                <TableCell>{product.category || 'Uncategorized'}</TableCell>
-                                <TableCell>
-                                    <span className={`px-2 py-1 text-xs rounded-full ${
-                                        product.isActive ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"
-                                    }`}>
-                                        {product.isActive ? "Published" : "Draft"}
-                                    </span>
-                                </TableCell>
-                                <TableCell className="text-right">
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button variant="ghost" className="h-8 w-8 p-0">
-                                                <span className="sr-only">Open menu</span>
-                                                <MoreHorizontal className="h-4 w-4" />
-                                            </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end">
-                                            <DropdownMenuItem asChild>
-                                                <Link 
-                                                    href={`/dashboard/new?id=${product._id}`} 
-                                                    className="flex items-center cursor-pointer"
-                                                    passHref
-                                                >
-                                                    <Edit className="h-4 w-4 mr-2" />
-                                                    Edit
-                                                </Link>
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem
-                                                className="text-red-600 focus:text-red-600 focus:bg-red-50"
-                                                onSelect={() => handleDelete(product._id)}
+                            <React.Fragment key={product._id}>
+                                <TableRow key={product._id}>
+                                    <TableCell className="font-medium">
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                onClick={() => toggleExpand(product._id)}
+                                                className="text-gray-500 hover:text-gray-800 focus:outline-none"
+                                                aria-label={expandedRows[product._id] ? "Collapse details" : "Expand details"}
                                             >
-                                                <div className="flex items-center w-full">
-                                                    <Trash2 className="h-4 w-4 mr-2" />
-                                                    Delete
-                                                </div>
-                                            </DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
-                                </TableCell>
-                            </TableRow>
-                        ))}
-
-                        {products.map((product) => (
-                            expandedRows[product._id] && product.variants.map((variant, i) => (
-                                <TableRow key={`${product._id}-variant-${i}`} className="bg-muted/20">
-                                    <TableCell colSpan={6}>
-                                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                                            {variant.imageUrl && (
-                                                <img
-                                                    src={variant.imageUrl}
-                                                    alt={variant.name}
-                                                    className="w-16 h-16 object-cover rounded-md border"
-                                                    loading="lazy"
-                                                />
-                                            )}
-                                            <div className="space-y-1">
-                                                <p className="font-semibold">{variant.name}</p>
-                                                <p className="text-sm text-muted-foreground">
-                                                    Price Adj: ${(variant.priceAdjustment || 0).toFixed(2)} | Stock: {variant.stock}
-                                                </p>
-                                            </div>
+                                                {expandedRows[product._id] ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                                            </button>
+                                            {product.name}
                                         </div>
                                     </TableCell>
+                                    <TableCell>
+                                        ${product.basePrice.toFixed(2)}
+                                        {product.variants.length > 0 && (
+                                            <>
+                                                <br />
+                                                <span className="text-xs text-muted-foreground">
+                                                    +${Math.max(...product.variants.map(v => v.priceAdjustment || 0)).toFixed(2)} max adj.
+                                                </span>
+                                            </>
+                                        )}
+                                    </TableCell>
+                                    <TableCell>
+                                        {product.variants.reduce((sum, variant) => sum + variant.stock, 0)}
+                                        <br />
+                                        <span className="text-xs text-muted-foreground">
+                                            {product.variants.length} variant{product.variants.length !== 1 ? "s" : ""}
+                                        </span>
+                                    </TableCell>
+                                    <TableCell>{product.category || 'Uncategorized'}</TableCell>
+                                    <TableCell>
+                                        <span className={`px-2 py-1 text-xs rounded-full ${
+                                            product.isActive ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"
+                                        }`}>
+                                            {product.isActive ? "Published" : "Draft"}
+                                        </span>
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                                    <span className="sr-only">Open menu</span>
+                                                    <MoreHorizontal className="h-4 w-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end">
+                                                <DropdownMenuItem asChild>
+                                                    <Link 
+                                                        href={`/dashboard/new?id=${product._id}`} 
+                                                        className="flex items-center cursor-pointer"
+                                                        passHref
+                                                    >
+                                                        <Edit className="h-4 w-4 mr-2" />
+                                                        Edit
+                                                    </Link>
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem
+                                                    className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                                                    onSelect={() => handleDelete(product._id)}
+                                                >
+                                                    <div className="flex items-center w-full">
+                                                        <Trash2 className="h-4 w-4 mr-2" />
+                                                        Delete
+                                                    </div>
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </TableCell>
                                 </TableRow>
-                            ))
+
+                                {expandedRows[product._id] && product.variants.map((variant, i) => (
+                                    <TableRow key={`${product._id}-variant-${i}`} className="bg-muted/20">
+                                        <TableCell colSpan={6}>
+                                            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                                                {variant.imageUrl && (
+                                                    <img
+                                                        src={variant.imageUrl}
+                                                        alt={variant.name}
+                                                        className="w-16 h-16 object-cover rounded-md border"
+                                                        loading="lazy"
+                                                    />
+                                                )}
+                                                <div className="space-y-1">
+                                                    <p className="font-semibold">{variant.name}</p>
+                                                    <p className="text-sm text-muted-foreground">
+                                                        Price Adj: ${(variant.priceAdjustment || 0).toFixed(2)} | Stock: {variant.stock}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </React.Fragment>
                         ))}
                     </TableBody>
                 </Table>

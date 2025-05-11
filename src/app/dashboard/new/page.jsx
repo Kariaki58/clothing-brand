@@ -337,7 +337,8 @@ export default function NewProduct() {
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.error || 'Failed to save product');
+                toast.success("Failed to save product");
+                return;
             }
 
             const result = await response.json();
@@ -348,8 +349,16 @@ export default function NewProduct() {
             }
             
             toast.success(result.message || 'Product saved successfully');
+            // reset form
+            setFormData({
+                _id: '',
+                name: '',
+                description: '',
+                price: '',
+                category: '',
+            });
+            setVariants([]);
         } catch (error) {
-            console.error('Error saving product:', error);
             toast.error(error.message || 'Failed to save product');
         } finally {
             setIsUploading(false);
@@ -471,9 +480,6 @@ export default function NewProduct() {
                     <div className="space-y-4">
                         <div className="flex items-center justify-between">
                             <Label className="text-lg">Product Variants *</Label>
-                            <p className="text-sm text-muted-foreground">
-                                Add variants with combinations of colors and sizes
-                            </p>
                         </div>
                         
                         {variants.length > 0 && (

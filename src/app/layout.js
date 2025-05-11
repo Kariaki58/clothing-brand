@@ -1,6 +1,7 @@
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "./auth-provider";
+import { Toaster } from "sonner";
 import Navbar from "./navbar";
 import Footer from "./footer";
 
@@ -18,6 +19,7 @@ export default function RootLayout({ children }) {
         <AuthProvider>
           <Navbar />
           <main className="min-h-[calc(100vh-140px)]">{children}</main>
+          <Toaster />
           <Footer />
         </AuthProvider>
       </body>
