@@ -48,6 +48,7 @@ export default function DashboardOrders() {
     const [cancelReason, setCancelReason] = useState("");
     const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
     const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
 
 
     // Fetch orders on component mount
@@ -72,11 +73,33 @@ export default function DashboardOrders() {
         fetchOrders();
     }, [currentPage]);
 
-    // Get current page orders
     const currentOrders = allOrders.slice(
         (currentPage - 1) * ITEMS_PER_PAGE,
         currentPage * ITEMS_PER_PAGE
     );
+
+    const handleSearch = async () => {
+        if (!searchQuery.trim()) return;
+    
+        try {
+            const response = await fetch(`/api/orders?query=${searchQuery}`);
+            const data = await response.json();
+
+            console.log({ data })
+    
+            if (data.orders.length > 0) {
+                setAllOrders(data.orders);
+                setTotalPages(1);
+                setCurrentPage(1);
+            } else {
+                toast.error("Order not found");
+            }
+        } catch (error) {
+            console.error("Search error:", error);
+            toast.error("Failed to fetch search results");
+        }
+    };
+    
 
     const handlePrevious = () => {
         if (currentPage > 1) {
@@ -112,7 +135,8 @@ export default function DashboardOrders() {
             });
             
             if (!response.ok) {
-                throw new Error('Failed to update order status');
+                toast.error("Failed to update order status");
+                return
             }
             
             const updatedOrder = await response.json();
@@ -251,6 +275,17 @@ export default function DashboardOrders() {
         <div className="space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <h1 className="text-2xl font-bold">Orders</h1>
+            {/* input to find order by orderId */}
+            <div className="flex items-center gap-2">
+                <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search by Order ID"
+                    className="border rounded-md px-2 py-1"
+                />
+                <Button onClick={handleSearch} variant="outline" size="sm">Search</Button>
+            </div>
         </div>
 
         <div className="rounded-md border overflow-x-auto">

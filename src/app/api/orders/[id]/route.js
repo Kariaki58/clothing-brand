@@ -3,7 +3,8 @@ import { options } from "../../auth/options";
 import { connectToDatabase } from "@/lib/mongoose";
 import Order from "../../../../../models/orders";
 import User from "../../../../../models/user";
-
+import { sendEmail } from "@/lib/sendEmail";
+import { generateBuyerCancelledEmail, generateBuyerDeliveredEmail, generateBuyerOrderStatusEmail } from "@/lib/email-template/content";
 
 
 export async function PUT(request, { params }) {
@@ -68,6 +69,7 @@ export async function PUT(request, { params }) {
             { new: true }
         ).lean();
         
+        console.log({items: updatedOrder.items})
         
         if (!updatedOrder) {
             return new Response(JSON.stringify({
@@ -106,6 +108,49 @@ export async function PUT(request, { params }) {
             transactionId: updatedOrder.transactionId,
             cancellationReason: updatedOrder.cancellationReason || null
         };
+
+
+        if (status === "cancelled") {
+            console.log({
+                firstName: updatedOrder.formData.firstName,
+                items: updatedOrder.items,
+                cancellationReason: updatedOrder.cancellationReason,
+                trackingId: updatedOrder._id
+            })
+            const template1 =  generateBuyerCancelledEmail({
+                firstName: updatedOrder.formData.firstName,
+                items: updatedOrder.items,
+                cancellationReason: updatedOrder.cancellationReason,
+                trackingId: updatedOrder._id
+            })
+            await sendEmail(updatedOrder.formData.email, "Your order has been cancelled", template1);
+        } else if (status === "delivered") {
+            console.log({
+                firstName: updatedOrder.formData.firstName,
+                items: updatedOrder.items,
+                trackingId: updatedOrder._id
+            })
+            const template2 = generateBuyerDeliveredEmail({
+                firstName: updatedOrder.formData.firstName,
+                items: updatedOrder.items,
+                trackingId: updatedOrder._id
+            })
+            await sendEmail(updatedOrder.formData.email, "Your order has been delivered", template2);
+        } else {
+            console.log({
+                firstName: updatedOrder.formData.firstName,
+                status: updatedOrder.status,
+                items: updatedOrder.items,
+                trackingId: updatedOrder._id
+            })
+            const emailTemplate = generateBuyerOrderStatusEmail({
+                firstName: updatedOrder.formData.firstName,
+                status: updatedOrder.status,
+                items: updatedOrder.items,
+                trackingId: updatedOrder._id
+            });
+            await sendEmail(process.env.EMAIL_ADDRESS, "You order Update", emailTemplate);
+        }
         
         return new Response(JSON.stringify(transformedOrder), { 
             status: 200,

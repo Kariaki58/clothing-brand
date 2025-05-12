@@ -5,11 +5,15 @@ import User from "../../../../models/user";
 import Order from "../../../../models/orders";
 import { logActivity } from "@/lib/activityLogger";
 import { Activities } from "@/lib/activityLogger";
+import { sendEmail } from "@/lib/sendEmail";
+
 
 
 export async function GET(request) {
     try {
         const session = await getServerSession(options);
+        const { searchParams } = new URL(request.url);
+        const query = searchParams.get('query');
         
         if (!session) {
             return new Response(JSON.stringify({ 
@@ -41,7 +45,6 @@ export async function GET(request) {
         }
         
         // Get pagination parameters from query string
-        const { searchParams } = new URL(request.url);
         const page = parseInt(searchParams.get('page')) || 1;
         const limit = parseInt(searchParams.get('limit')) || 8; // Default to 8 items per page
         
@@ -52,11 +55,20 @@ export async function GET(request) {
         const totalOrders = await Order.countDocuments();
         
         // Get paginated orders
-        const orders = await Order.find()
-            .sort({ createdAt: -1 })
-            .skip(skip)
-            .limit(limit)
-            .lean();
+
+        let orders = []
+
+        if (query) {
+            console.log({query})
+            orders = await Order.find({_id: query})
+            console.log(orders)
+        } else {
+            orders = await Order.find()
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(limit)
+                .lean();
+        }
         
         // Transform the data to match frontend expectations
         const transformedOrders = orders.map(order => ({
@@ -204,6 +216,10 @@ export async function POST(request) {
         const session = await getServerSession(options);
 
         await logActivity(Activities.orderCreated(order, session.user));
+
+        const emailNotification = generateSimpleSellerOrderNotificationTemplate()
+
+        await sendEmail(process.env.EMAIL_ADDRESS, "Congratulations 🎉 New Order Received", emailNotification)
 
         return new Response(
             JSON.stringify({ message: "Order processed successfully." }),
