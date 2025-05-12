@@ -73,10 +73,7 @@ export default function DashboardOrders() {
         fetchOrders();
     }, [currentPage]);
 
-    const currentOrders = allOrders.slice(
-        (currentPage - 1) * ITEMS_PER_PAGE,
-        currentPage * ITEMS_PER_PAGE
-    );
+    const currentOrders = allOrders
 
     const handleSearch = async () => {
         if (!searchQuery.trim()) return;
