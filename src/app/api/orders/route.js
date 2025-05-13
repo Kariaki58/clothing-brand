@@ -6,7 +6,7 @@ import Order from "../../../../models/orders";
 import { logActivity } from "@/lib/activityLogger";
 import { Activities } from "@/lib/activityLogger";
 import { sendEmail } from "@/lib/sendEmail";
-
+import { generateSimpleSellerOrderNotificationTemplate } from "@/lib/email-template/content";
 
 
 export async function GET(request) {
@@ -210,7 +210,7 @@ export async function POST(request) {
 
 
 
-        await order.save();
+        const orderDetails = await order.save();
 
 
         const session = await getServerSession(options);
@@ -222,10 +222,11 @@ export async function POST(request) {
         await sendEmail(process.env.EMAIL_ADDRESS, "Congratulations 🎉 New Order Received", emailNotification)
 
         return new Response(
-            JSON.stringify({ message: "Order processed successfully." }),
+            JSON.stringify({ message: "Order processed successfully.", orderId: orderDetails._id }),
             { status: 201 }
         );
     } catch (error) {
+        console.log(error)
         return new Response(
             JSON.stringify({ message: "Internal Server Error." }),
             { status: 500 }

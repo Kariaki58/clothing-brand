@@ -6,12 +6,13 @@ import { useRouter } from "next/navigation";
 import CheckoutForm from "@/components/checkout-form";
 import { useCartStore } from "../../../store/cartStore";
 import { useState, useEffect } from "react";
+import { loadStripe } from "@stripe/stripe-js";
 
 export default function CheckoutPage() {
     const router = useRouter();
     const [isMounted, setIsMounted] = useState(false);
     const { items: cartItems, getTotalPrice, clearCart } = useCartStore();
-    const [PaystackPop, setPaystackPop] = useState(null);
+    const [stripePromise, setStripePromise] = useState(null);
     const [isProcessing, setIsProcessing] = useState(false);
 
     const [formData, setFormData] = useState({
@@ -29,9 +30,7 @@ export default function CheckoutPage() {
 
     useEffect(() => {
         setIsMounted(true);
-        import("@paystack/inline-js").then((module) => {
-            setPaystackPop(() => module.default);
-        });
+        setStripePromise(loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY));
     }, []);
 
     const subtotal = isMounted ? getTotalPrice() : 0;
@@ -43,62 +42,68 @@ export default function CheckoutPage() {
         setFormData(data);
     };
 
-    const handlePlaceOrder = () => {
-        if (!PaystackPop) {
-            alert("Payment SDK not loaded. Please try again.");
-            return;
-        }
-
+    const handlePlaceOrder = async () => {
         if (!formData.email) {
             alert("Please provide your email address");
             return;
         }
 
         setIsProcessing(true);
-        const totalAmount = total * 100;
 
-        const paystack = new PaystackPop();
-        paystack.newTransaction({
-            key: process.env.NEXT_PUBLIC_PAYSTACK_KEY,
-            email: formData.email,
-            amount: totalAmount,
-            onSuccess: async (transaction) => {
-                try {
-                    const orderData = {
-                        formData,
-                        items: cartItems,
-                        tax: tax,
-                        shipping: shipping,
-                        total: total,
-                        transactionId: transaction.reference,
-                    };
-                    
-                    const response = await fetch(`/api/orders`, {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                        },
-                        body: JSON.stringify(orderData),
-                    });
+        try {
+            // First create the order in your database
+            const orderData = {
+                formData,
+                items: cartItems,
+                tax: tax,
+                shipping: shipping,
+                total: total,
+                transactionId: "temp_" + Math.random().toString(36).substring(2, 11), // Temporary ID
+            };
+            
+            const orderResponse = await fetch('/api/orders', {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(orderData),
+            });
 
-                    if (!response.ok) {
-                        throw new Error("Failed to process order");
-                    }
-                    const result = await response.json();
-                    alert("Order processed successfully:", result);
-                    clearCart();
-                    router.push("/thank-you");
-                } catch (error) {
-                    alert("Order processing failed. Please contact support.");
-                } finally {
-                    setIsProcessing(false);
-                }
-            },
-            onCancel: () => {
-                setIsProcessing(false);
-                alert("Payment was cancelled");
-            },
-        });
+            if (!orderResponse.ok) {
+                throw new Error("Failed to create order");
+            }
+
+            const orderResult = await orderResponse.json();
+            
+            // Then create Stripe checkout session
+            const response = await fetch('/api/checkout', {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    items: cartItems, // Your cart items array
+                    orderId: orderResult.orderId, // From your order creation
+                    customerEmail: formData.email // From your form
+                }),
+            });
+
+            if (!response.ok) {
+                alert("Order processing failed. Please contact support.");
+                return;
+            }
+
+            const { url } = await response.json();
+
+            clearCart()
+            
+            // Redirect to Stripe checkout
+            window.location.href = url;
+            
+        } catch (error) {
+            alert("Order processing failed. Please contact support.");
+            setIsProcessing(false);
+        }
     };
 
     if (!isMounted) {
@@ -181,7 +186,7 @@ export default function CheckoutPage() {
                                                 defaultChecked
                                             />
                                             <label htmlFor="credit-card" className="ml-3 block text-sm font-medium text-slate-700">
-                                                PayStack
+                                                Credit Card (Stripe)
                                             </label>
                                         </div>
                                     </div>
